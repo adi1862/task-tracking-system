@@ -3,6 +3,11 @@ import { StatusCodes } from 'http-status-codes';
 import taskFactory from '../services/task.service.js'
 import logger from "../config/logger.js";
 
+/**
+ * 
+ * @param {*} req taskId
+ * @param {*} res task object fetched from DB for given ID.
+ */
 export const getTaskById = async (req, res) => {
   try{
     const {id: taskId} = req.query;
@@ -15,6 +20,11 @@ export const getTaskById = async (req, res) => {
   }
 }
 
+/**
+ * 
+ * @param {*} req The name and description to create a new task
+ * @param {*} res return taskId, if created successfully.
+ */
 export const createTask = async (req, res) => {
   try{
     logger.info(`creating task for title: ${req.body.name}`)
@@ -26,6 +36,11 @@ export const createTask = async (req, res) => {
   }
 }
 
+/**
+ * 
+ * @param {*} req taskId in params and an object to update status, name or description
+ * @param {*} res 200 OK
+ */
 export const updateTask = async (req, res) => {
   try{
     const {id} = req.params;
@@ -38,6 +53,11 @@ export const updateTask = async (req, res) => {
   }
 }
 
+/**
+ * 
+ * @param {*} req pageNumber
+ * @param {*} res returns List of paginated tasks
+ */
 export const getAllTask = async (req, res) => {
   try{
     logger.info(`getting all task for`)
@@ -50,11 +70,16 @@ export const getAllTask = async (req, res) => {
   }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res returns the metrics related to task status and dates.
+ */
 export const getTaskProgress = async (req, res) => {
   try{
     logger.info(`getting task progress metrics`)
-    const taskObjs = await taskFactory.getTaskMetrics();
-    sendHttpResponse(res, taskObjs, 'fetched successfully', StatusCodes.OK)
+    const taskMetrics = await taskFactory.getTaskMetrics();
+    sendHttpResponse(res, taskMetrics, 'fetched successfully', StatusCodes.OK)
   }catch(err){
     logger.error(`some error while fetching metrics ${JSON.stringify(err.message)}`)
     sendHttpResponse(res, {}, err.message, StatusCodes.INTERNAL_SERVER_ERROR) 

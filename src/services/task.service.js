@@ -4,6 +4,7 @@ import sequelize from '../config/database.js';
 import _ from 'lodash';
 import { statusTypes } from '../models/enums.js';
 import constants from '../config/constants.js';
+
 const getTaskById = async (taskId) => {
   /** 
    * SELECT * FROM tasks; 
@@ -59,7 +60,7 @@ const getTaskMetrics = async () => {
       ORDER BY DATE(created_at);
     `
   )
-  dateWiseProgress = dateWiseProgress[0]
+  dateWiseProgress = dateWiseProgress[0];
   const statusWiseProgressResponse = {open_tasks:0, inprogress_tasks:0, completed_tasks:0};
   // using loadash to transform into desired response structure
   statusWiseProgressResponse.open_tasks = _getAggregatedCountForStatusForObj(statusWiseProgress, statusTypes.OPEN)
@@ -68,7 +69,7 @@ const getTaskMetrics = async () => {
   
   dateWiseProgress = _.groupBy(dateWiseProgress, dateWiseProgress => dateWiseProgress.date)
   const dateWiseProgressResponse = [];
-
+  // massaging data to align with the required response
   for(var key in dateWiseProgress ){
     const res = {
       date: key,
