@@ -8,7 +8,6 @@ export const getTaskById = async (req, res) => {
     const {id: taskId} = req.query;
     logger.info(`getting task for Id: ${JSON.stringify(taskId)}`)
     const taskObj = await taskFactory.getTaskById(taskId);
-    console.log(taskObj)
     sendHttpResponse(res, taskObj)
   }catch(err){
     logger.error(`some error while fetching object ${JSON.stringify(err.message)}`)
@@ -32,7 +31,6 @@ export const updateTask = async (req, res) => {
     const {id} = req.params;
     logger.info(`updating task for id: ${id}, body: ${JSON.stringify(req.body)}`)
     const taskObj = await taskFactory.updateTask({...req.body}, id);
-    console.log(taskObj)
     sendHttpResponse(res, {}, 'updated successfully', StatusCodes.OK)
   }catch(err){
     logger.error(`some error while updating object ${JSON.stringify(err.message)}`)
@@ -56,8 +54,7 @@ export const getTaskProgress = async (req, res) => {
   try{
     logger.info(`getting task progress metrics`)
     const taskObjs = await taskFactory.getTaskMetrics();
-    console.log(taskObjs)
-    sendHttpResponse(res, {tasks:taskObjs}, 'fetched successfully', StatusCodes.OK)
+    sendHttpResponse(res, taskObjs, 'fetched successfully', StatusCodes.OK)
   }catch(err){
     logger.error(`some error while fetching metrics ${JSON.stringify(err.message)}`)
     sendHttpResponse(res, {}, err.message, StatusCodes.INTERNAL_SERVER_ERROR) 

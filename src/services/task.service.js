@@ -1,7 +1,9 @@
 import { Sequelize } from 'sequelize';
 import {Task} from '../models/tasks.js';
 import sequelize from '../config/database.js';
-
+import _ from 'lodash';
+import { statusTypes } from '../models/enums.js';
+import constants from '../config/constants.js';
 const getTaskById = async (taskId) => {
   /** 
    * SELECT * FROM tasks; 
@@ -34,39 +36,63 @@ const updateTask = async (payload, id) => {
   )
 }
 
-const PAGE_LIMIT = 10
+const PAGE_SIZE = constants.PAGE_SIZE;
 const getAllTask = async (pageNumber=0) => {
-  return Task.findAll({ offset: (pageNumber-1)*PAGE_LIMIT, limit: PAGE_LIMIT })
+  return Task.findAll({ offset: (pageNumber-1)*PAGE_SIZE, limit: PAGE_SIZE })
 }
 
 const getTaskMetrics = async () => {
   // get aggregated values for status
-  // SELECT `status`, DATE('created_at'), COUNT('status') AS `count` 
-  // FROM `tasks` AS `model` GROUP BY `status`, DATE('created_at');
-  const findStatusWiseProgress = await Task.findAll(
+  const statusWiseProgress = await Task.findAll(
     {
       group: 'status',
       attributes: ['status', [Sequelize.fn('COUNT', 'status'), 'count']]
     },
   );
-  console.log(findStatusWiseProgress)
+
   // get date wise aggregated tasks
-  // const findDateWiseProgress = await Task.findAll( {
-  //   group: ['status', Sequelize.fn('DATE','created_at')],
-  //   attributes: ['status', Sequelize.fn('DATE','created_at'), [Sequelize.fn('COUNT', 'status'), 'count']]
-  // })
-  const findDateWiseProgress = await sequelize.query(
+  let dateWiseProgress = await sequelize.query(
     `
-      SELECT status, DATE('created_at') date, COUNT('status') count 
+      SELECT status, DATE(created_at) date, COUNT(status) count 
       FROM tasks 
-      GROUP BY status, DATE('created_at');
-    `,
-    {
-      model: Task,
-      mapToModel: true
-    }
+      GROUP BY status, DATE(created_at)
+      ORDER BY DATE(created_at);
+    `
   )
-  console.log(findDateWiseProgress)
+  dateWiseProgress = dateWiseProgress[0]
+  const statusWiseProgressResponse = {open_tasks:0, inprogress_tasks:0, completed_tasks:0};
+  // using loadash to transform into desired response structure
+  statusWiseProgressResponse.open_tasks = _getAggregatedCountForStatusForObj(statusWiseProgress, statusTypes.OPEN)
+  statusWiseProgressResponse.inprogress_tasks = _getAggregatedCountForStatusForObj(statusWiseProgress, statusTypes.INPROGRESS)
+  statusWiseProgressResponse.completed_tasks = _getAggregatedCountForStatusForObj(statusWiseProgress, statusTypes.COMPLETED)
+  
+  dateWiseProgress = _.groupBy(dateWiseProgress, dateWiseProgress => dateWiseProgress.date)
+  const dateWiseProgressResponse = [];
+
+  for(var key in dateWiseProgress ){
+    const res = {
+      date: key,
+      metrics: {
+        open_tasks: _getAggregatedCountForStatus(dateWiseProgress[key], statusTypes.OPEN),
+        inprogress_tasks: _getAggregatedCountForStatus(dateWiseProgress[key], statusTypes.INPROGRESS),
+        completed_tasks: _getAggregatedCountForStatus(dateWiseProgress[key], statusTypes.COMPLETED)
+      }
+    }
+    dateWiseProgressResponse.push(res)
+  }
+  return {metrics: statusWiseProgressResponse, dateWiseMetrics: dateWiseProgressResponse};
+}
+
+const _getAggregatedCountForStatusForObj = (iterableList, status) => {
+  const filteredList = _.filter(iterableList, (progress) => progress.getDataValue('status') == status);
+  if(filteredList[0])return filteredList[0].getDataValue('count');
+  return 0;
+}
+
+const _getAggregatedCountForStatus = (iterableList, status) => {
+  const filteredList = _.filter(iterableList, (progress) => progress.status == status);
+  if(filteredList[0])return filteredList[0]?.count
+  return 0;
 }
 export default {
   getTaskById,
