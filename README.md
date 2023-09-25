@@ -28,5 +28,6 @@ This system is for tracking tasks.
 https://documenter.getpostman.com/view/5540838/2s9YJW6RSq
 
 
-### Node Version
-> v16.14.0
+### Software Version
+> Node: v16.14.0
+> Mysql: 8.0.32
