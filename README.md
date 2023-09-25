@@ -19,12 +19,10 @@ This system is for tracking tasks.
 
 ```
 4. Run the following command:
-  ````
   ```
-  > npm i
-  > npm start
+  npm i
+  npm start
   ```
-  ````
 
 ### API Documentation
 https://documenter.getpostman.com/view/5540838/2s9YJW6RSq
